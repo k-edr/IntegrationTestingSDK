@@ -1,0 +1,20 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# IDE
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# NuGet
+*.nupkg
+**/packages/
+
+# Local config (contains personal paths)
+build-config.json
+
+# OS files
+**/.DS_Store
+Thumbs.db
