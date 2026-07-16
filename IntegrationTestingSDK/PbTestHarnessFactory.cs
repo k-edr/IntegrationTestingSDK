@@ -37,7 +37,7 @@ namespace IntegrationTestingSDK
             // Deploy plugin + blueprints (idempotent — skips if already done)
             PluginDeployer.Deploy(seBin64);
 
-            // HTTP-based harness: SDK ↔ HttpApiServer (port 9980).
+            // HTTP-based harness: SDK ↔ GridSpawner API (port 9997).
             // GameProcessManager + WorldManager handle the game lifecycle externally.
             return new PbTestHarnessHttp(
                 new GameProcessManager(seBin64),

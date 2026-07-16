@@ -18,7 +18,7 @@ namespace IntegrationTestingSDK.Client
     /// </summary>
     internal sealed class PbTestHarnessHttp : IPbTestHarness
     {
-        private const string ApiBase = "http://localhost:9980/api/v1";
+        private const string ApiBase = "http://localhost:9997/api/v1";
         private static readonly TimeSpan HealthPollInterval = TimeSpan.FromSeconds(2);
 
         private readonly GameProcessManager _game;
@@ -65,16 +65,19 @@ namespace IntegrationTestingSDK.Client
 
         public IReadOnlyList<long> SpawnTestGrid(string blueprintName, double x, double y, double z)
         {
-            var body = $"{{\"blueprint\":\"{EscapeJson(blueprintName)}\",\"x\":{x},\"y\":{y},\"z\":{z}}}";
+            var body = $"{{\"blueprint\":\"{EscapeJson(blueprintName)}\",\"position\":{{\"x\":{x},\"y\":{y},\"z\":{z}}}}}";
             var resp = Post($"{ApiBase}/spawn", body);
 
-            // Parse {gridIds:[1,2,3]}
+            // Parse {"grids":[{"id":1,"name":"...","position":{...}}]}
             using var doc = JsonDocument.Parse(resp);
             var ids = new List<long>();
-            if (doc.RootElement.TryGetProperty("gridIds", out var arr))
+            if (doc.RootElement.TryGetProperty("grids", out var arr))
             {
                 foreach (var el in arr.EnumerateArray())
-                    ids.Add(el.GetInt64());
+                {
+                    if (el.TryGetProperty("id", out var idProp))
+                        ids.Add(idProp.GetInt64());
+                }
             }
             return ids;
         }
@@ -101,8 +104,8 @@ namespace IntegrationTestingSDK.Client
             var resp = Post($"{ApiBase}/grids/{gridId}/run", body);
 
             using var doc = JsonDocument.Parse(resp);
-            return doc.RootElement.TryGetProperty("output", out var outProp)
-                ? outProp.GetString() ?? ""
+            return doc.RootElement.TryGetProperty("echo", out var echoProp)
+                ? echoProp.GetString() ?? ""
                 : "";
         }
 
@@ -136,18 +139,32 @@ namespace IntegrationTestingSDK.Client
 
             using var doc = JsonDocument.Parse(resp);
             var result = new List<BlockState>();
-            if (doc.RootElement.TryGetProperty("blocks", out var arr))
+            foreach (var el in doc.RootElement.EnumerateArray())
             {
-                foreach (var el in arr.EnumerateArray())
+                var definition = el.TryGetProperty("definition", out var d) ? d.GetString() ?? "" : "";
+                var type = "?";
+                var subtype = "?";
+
+                // TerminalBlockDto.Type/Definition is "MyObjectBuilder_Reactor/SmallBlockSmallGenerator"
+                var slashIdx = definition.IndexOf('/');
+                if (slashIdx >= 0)
                 {
-                    result.Add(new BlockState
-                    {
-                        EntityId = el.TryGetProperty("entityId", out var id) ? id.GetInt64() : 0,
-                        Type = el.TryGetProperty("type", out var t) ? t.GetString() : "?",
-                        Subtype = el.TryGetProperty("subtype", out var s) ? s.GetString() : "?",
-                        Enabled = el.TryGetProperty("enabled", out var e) && e.GetBoolean()
-                    });
+                    type = definition.Substring(0, slashIdx);
+                    subtype = definition.Substring(slashIdx + 1);
                 }
+                else if (!string.IsNullOrEmpty(definition))
+                {
+                    subtype = definition;
+                    type = el.TryGetProperty("type", out var t) ? t.GetString() ?? "?" : "?";
+                }
+
+                result.Add(new BlockState
+                {
+                    EntityId = el.TryGetProperty("entityId", out var id) ? id.GetInt64() : 0,
+                    Type = type,
+                    Subtype = subtype,
+                    Enabled = el.TryGetProperty("isWorking", out var ew) && ew.GetBoolean()
+                });
             }
             return result;
         }

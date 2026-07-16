@@ -69,24 +69,31 @@ namespace IntegrationTestingSDK.Client
 
         private static void CopyPluginDlls(string reposRoot, string pluginsDir)
         {
-            var pluginBin = Path.Combine(reposRoot,
-                "IntegrationTestingSDK", "IntegrationTestingSDK.Plugin", "bin", "Debug");
+            // GridSpawner.Plugin (MySpawnerController)
+            var spawnerPluginBin = Path.Combine(reposRoot,
+                "MySpawnerController", "GridSpawner.Plugin", "bin", "Release");
 
-            if (!Directory.Exists(pluginBin))
+            if (!Directory.Exists(spawnerPluginBin))
                 throw new DirectoryNotFoundException(
-                    $"Plugin output not found: {pluginBin}. Build IntegrationTestingSDK.Plugin first.");
+                    $"GridSpawner.Plugin output not found: {spawnerPluginBin}. Build MySpawnerController first (build.ps1).");
 
-            var pluginDll = Path.Combine(pluginBin, "IntegrationTestingSDK.Plugin.dll");
-            if (!File.Exists(pluginDll))
-                throw new FileNotFoundException($"Plugin DLL not found: {pluginDll}");
+            var spawnerDll = Path.Combine(spawnerPluginBin, "GridSpawner.Plugin.dll");
+            if (!File.Exists(spawnerDll))
+                throw new FileNotFoundException($"GridSpawner.Plugin.dll not found: {spawnerDll}");
 
-            CopyIfNewer(pluginDll, Path.Combine(pluginsDir, "IntegrationTestingSDK.Plugin.dll"));
+            CopyIfNewer(spawnerDll, Path.Combine(pluginsDir, "GridSpawner.Plugin.dll"));
 
-            var sdkDll = Path.Combine(reposRoot,
-                "IntegrationTestingSDK", "IntegrationTestingSDK",
-                "bin", "Debug", "netstandard2.0", "IntegrationTestingSDK.dll");
-            if (File.Exists(sdkDll))
-                CopyIfNewer(sdkDll, Path.Combine(pluginsDir, "IntegrationTestingSDK.dll"));
+            // GridSpawner.Shared
+            var sharedDll = Path.Combine(reposRoot,
+                "MySpawnerController", "GridSpawner.Shared", "bin", "Release", "netstandard2.0", "GridSpawner.Shared.dll");
+            if (File.Exists(sharedDll))
+                CopyIfNewer(sharedDll, Path.Combine(pluginsDir, "GridSpawner.Shared.dll"));
+
+            // GridSpawner.Api
+            var apiDll = Path.Combine(reposRoot,
+                "MySpawnerController", "GridSpawner.Api", "bin", "Release", "netstandard2.0", "GridSpawner.Api.dll");
+            if (File.Exists(apiDll))
+                CopyIfNewer(apiDll, Path.Combine(pluginsDir, "GridSpawner.Api.dll"));
         }
 
         // ── PluginLoader registration ─────────────────────────
@@ -100,7 +107,7 @@ namespace IntegrationTestingSDK.Client
                 return;
             }
 
-            var dllPath = Path.Combine(pluginsDir, "IntegrationTestingSDK.Plugin.dll");
+            var dllPath = Path.Combine(pluginsDir, "GridSpawner.Plugin.dll");
 
             var doc = new XmlDocument { PreserveWhitespace = true };
             doc.Load(configXml);
