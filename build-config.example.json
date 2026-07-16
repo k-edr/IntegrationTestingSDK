@@ -1,4 +1,8 @@
 {
-  "_comment": "Copy this file to build-config.json and edit seBin64 to match your Space Engineers installation.",
-  "seBin64": "D:\\SteamLibrary\\steamapps\\common\\SpaceEngineers\\Bin64"
+  "_comment": "Copy this file to build-config.json and edit values to match your setup.",
+  "seBin64": "D:\\SteamLibrary\\steamapps\\common\\SpaceEngineers\\Bin64",
+  "apiPort": 9997,
+  "healthPollIntervalSeconds": 2,
+  "sessionTimeoutMinutes": 3,
+  "httpTimeoutSeconds": 30
 }

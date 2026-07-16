@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -14,12 +13,13 @@ namespace IntegrationTestingSDK.Client
     /// <summary>
     ///     HTTP-based test harness for integration tests.
     ///     Manages game lifecycle through <see cref="GameProcessManager"/> + <see cref="WorldManager"/>,
-    ///     talks to the in-game <c>HttpApiServer</c> (port 9980) for spawn/upload/run/lcd.
+    ///     talks to the in-game GridSpawner API for spawn/upload/run/lcd.
     /// </summary>
     internal sealed class PbTestHarnessHttp : IPbTestHarness
     {
-        private const string ApiBase = "http://localhost:9997/api/v1";
-        private static readonly TimeSpan HealthPollInterval = TimeSpan.FromSeconds(2);
+        private readonly string _apiBase;
+        private readonly TimeSpan _healthPollInterval;
+        private readonly TimeSpan _sessionTimeout;
 
         private readonly GameProcessManager _game;
         private readonly WorldManager _worlds;
@@ -32,12 +32,17 @@ namespace IntegrationTestingSDK.Client
         public PbTestHarnessHttp(
             GameProcessManager game,
             WorldManager worlds,
-            string scriptCode)
+            string scriptCode,
+            PbTestHarnessConfig config)
         {
             _game = game;
             _worlds = worlds;
             _scriptCode = scriptCode;
-            _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+
+            _apiBase = $"http://localhost:{config.ApiPort}/api/v1";
+            _healthPollInterval = TimeSpan.FromSeconds(config.HealthPollIntervalSeconds);
+            _sessionTimeout = TimeSpan.FromMinutes(config.SessionTimeoutMinutes);
+            _http = new HttpClient { Timeout = TimeSpan.FromSeconds(config.HttpTimeoutSeconds) };
         }
 
         // ── World lifecycle ──────────────────────────────────────
@@ -48,7 +53,7 @@ namespace IntegrationTestingSDK.Client
             _worlds.CopyWorld(templateWorldName, workingCopyName);
             WriteAutoWorldLoaderConfig(workingCopyName);
             _game.Launch(workingCopyName);
-            WaitForSession(TimeSpan.FromMinutes(3));
+            WaitForSession(_sessionTimeout);
         }
 
         public void StopWorld()
@@ -65,10 +70,10 @@ namespace IntegrationTestingSDK.Client
 
         public IReadOnlyList<long> SpawnTestGrid(string blueprintName, double x, double y, double z)
         {
+            // TODO: Replace manual JSON with models
             var body = $"{{\"blueprint\":\"{EscapeJson(blueprintName)}\",\"position\":{{\"x\":{x},\"y\":{y},\"z\":{z}}}}}";
-            var resp = Post($"{ApiBase}/spawn", body);
+            var resp = Post($"{_apiBase}/spawn", body);
 
-            // Parse {"grids":[{"id":1,"name":"...","position":{...}}]}
             using var doc = JsonDocument.Parse(resp);
             var ids = new List<long>();
             if (doc.RootElement.TryGetProperty("grids", out var arr))
@@ -84,7 +89,7 @@ namespace IntegrationTestingSDK.Client
 
         public void RemoveTestGrid(long gridId)
         {
-            Delete($"{ApiBase}/grids/{gridId}");
+            Delete($"{_apiBase}/grids/{gridId}");
         }
 
         public void UploadScript(long gridId)
@@ -92,16 +97,18 @@ namespace IntegrationTestingSDK.Client
             if (string.IsNullOrEmpty(_scriptCode))
                 throw new InvalidOperationException("No script code provided.");
 
+            // TODO: Replace manual JSON with models
             var body = $"{{\"code\":\"{EscapeJson(_scriptCode)}\"}}";
-            Put($"{ApiBase}/grids/{gridId}/script", body);
+            Put($"{_apiBase}/grids/{gridId}/script", body);
         }
 
         public string RunScript(long gridId, string argument = null)
         {
+            // TODO: Replace manual JSON with models
             var body = argument != null
                 ? $"{{\"argument\":\"{EscapeJson(argument)}\"}}"
                 : "{}";
-            var resp = Post($"{ApiBase}/grids/{gridId}/run", body);
+            var resp = Post($"{_apiBase}/grids/{gridId}/run", body);
 
             using var doc = JsonDocument.Parse(resp);
             return doc.RootElement.TryGetProperty("echo", out var echoProp)
@@ -109,6 +116,7 @@ namespace IntegrationTestingSDK.Client
                 : "";
         }
 
+        // TODO: Rework without Thread.Sleep — poll with a proper timeout instead
         public string GetLcdContent(long gridId)
         {
             // Give the game a tick to flush any pending WriteText.
@@ -116,7 +124,7 @@ namespace IntegrationTestingSDK.Client
 
             for (int attempt = 0; attempt < 5; attempt++)
             {
-                var resp = Get($"{ApiBase}/grids/{gridId}/lcd");
+                var resp = Get($"{_apiBase}/grids/{gridId}/lcd");
 
                 using var doc = JsonDocument.Parse(resp);
                 var content = doc.RootElement.TryGetProperty("content", out var cProp)
@@ -135,7 +143,7 @@ namespace IntegrationTestingSDK.Client
 
         public IReadOnlyList<BlockState> GetBlockStates(long gridId)
         {
-            var resp = Get($"{ApiBase}/grids/{gridId}/blocks");
+            var resp = Get($"{_apiBase}/grids/{gridId}/blocks");
 
             using var doc = JsonDocument.Parse(resp);
             var result = new List<BlockState>();
@@ -229,7 +237,7 @@ namespace IntegrationTestingSDK.Client
             {
                 try
                 {
-                    var resp = _http.GetAsync($"{ApiBase}/health").Result;
+                    var resp = _http.GetAsync($"{_apiBase}/health").Result;
                     var body = resp.Content.ReadAsStringAsync().Result;
                     if (body.Contains("\"ready\":true"))
                     {
@@ -243,12 +251,12 @@ namespace IntegrationTestingSDK.Client
                     // Server not up yet, keep polling
                 }
 
-                Thread.Sleep(HealthPollInterval);
+                Thread.Sleep(_healthPollInterval);
             }
 
             throw new TimeoutException(
                 $"Timed out waiting for game session after {timeout.TotalSeconds:N0}s. " +
-                "Is AutoWorldLoader + IntegrationTestingSDK.Plugin installed?");
+                "Is AutoWorldLoader + GridSpawner.Plugin installed?");
         }
 
         private static void WriteAutoWorldLoaderConfig(string worldName)

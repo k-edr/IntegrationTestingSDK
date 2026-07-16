@@ -37,12 +37,21 @@ namespace IntegrationTestingSDK
             // Deploy plugin + blueprints (idempotent — skips if already done)
             PluginDeployer.Deploy(seBin64);
 
-            // HTTP-based harness: SDK ↔ GridSpawner API (port 9997).
-            // GameProcessManager + WorldManager handle the game lifecycle externally.
+            var harnessConfig = new PbTestHarnessConfig
+            {
+                ApiPort = config.apiPort,
+                HealthPollIntervalSeconds = config.healthPollIntervalSeconds,
+                SessionTimeoutMinutes = config.sessionTimeoutMinutes,
+                HttpTimeoutSeconds = config.httpTimeoutSeconds
+            };
+
+            SdkLog.Info($"GridSpawner API: http://localhost:{harnessConfig.ApiPort}/api/v1");
+
             return new PbTestHarnessHttp(
                 new GameProcessManager(seBin64),
                 new WorldManager(templatesDir),
-                scriptCode);
+                scriptCode,
+                harnessConfig);
         }
 
         // ── Config loading ─────────────────────────────────────
@@ -50,6 +59,10 @@ namespace IntegrationTestingSDK
         private class BuildConfig
         {
             public string seBin64 { get; set; }
+            public int apiPort { get; set; } = 9997;
+            public int healthPollIntervalSeconds { get; set; } = 2;
+            public int sessionTimeoutMinutes { get; set; } = 3;
+            public int httpTimeoutSeconds { get; set; } = 30;
         }
 
         private static BuildConfig LoadConfig()
