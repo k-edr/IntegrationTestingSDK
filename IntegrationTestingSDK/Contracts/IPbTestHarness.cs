@@ -50,5 +50,10 @@ namespace IntegrationTestingSDK.Contracts
         ///     Read the current content of the LCD panel on the grid.
         /// </summary>
         string GetLcdContent(long gridId);
+
+        /// <summary>
+        ///     Read the Enabled state of every block on the grid.
+        /// </summary>
+        IReadOnlyList<BlockState> GetBlockStates(long gridId);
     }
 }

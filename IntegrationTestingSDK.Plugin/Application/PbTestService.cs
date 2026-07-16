@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using IntegrationTestingSDK.Contracts;
 using IntegrationTestingSDK.Plugin.Infrastructure;
 using Sandbox.Game.Entities;
 using Sandbox.Game.World;
@@ -18,10 +17,10 @@ namespace IntegrationTestingSDK.Plugin.Application
 {
     /// <summary>
     ///     Core service wrapping ModAPI for integration testing.
-    ///     Implements <see cref="IInGameHarness"/> — direct ModAPI, no HTTP.
     ///     All game-thread work is enqueued via <see cref="MainThreadTask"/>.
+    ///     Called by <see cref="HttpApiServer"/> — HTTP-friendly API, no direct IPC.
     /// </summary>
-    internal sealed class PbTestService : IInGameHarness
+    internal sealed class PbTestService
     {
         private readonly ConcurrentQueue<MainThreadTask> _queue = new();
         private readonly TimeSpan _timeout = TimeSpan.FromSeconds(30);
@@ -54,6 +53,11 @@ namespace IntegrationTestingSDK.Plugin.Application
         public string GetLcdContent(long gridId)
         {
             return Enqueue(() => DoGetLcd(gridId));
+        }
+
+        public IReadOnlyList<IntegrationTestingSDK.Contracts.BlockState> GetBlockStates(long gridId)
+        {
+            return Enqueue(() => DoGetBlockStates(gridId));
         }
 
         public void Dispose()
@@ -203,7 +207,11 @@ namespace IntegrationTestingSDK.Plugin.Application
             var ok = ingamePb.TryRun(argument);
             Logger.Info($"PB Run(\"{argument}\") on grid {gridId}: {(ok ? "OK" : "FAIL")}");
 
-            return ReadLcdContent(grid) ?? "";
+            if (!ok)
+                throw new InvalidOperationException($"PB TryRun failed on grid {gridId}");
+
+            // Don't read LCD here — caller uses GetLcdContent after a frame
+            return "";
         }
 
         private string DoGetLcd(long gridId)
@@ -213,6 +221,33 @@ namespace IntegrationTestingSDK.Plugin.Application
                 throw new InvalidOperationException($"Grid not found: {gridId}");
 
             return ReadLcdContent(grid) ?? "";
+        }
+
+        private List<IntegrationTestingSDK.Contracts.BlockState> DoGetBlockStates(long gridId)
+        {
+            var entity = MyAPIGateway.Entities.GetEntityById(gridId);
+            if (!(entity is MyCubeGrid grid))
+                throw new InvalidOperationException($"Grid not found: {gridId}");
+
+            var result = new List<IntegrationTestingSDK.Contracts.BlockState>();
+            foreach (var fat in grid.GetFatBlocks())
+            {
+                var slim = fat.BlockDefinition;
+                var subtype = slim?.Id.SubtypeName;
+                if (string.IsNullOrEmpty(subtype))
+                    subtype = slim?.Id.SubtypeId.ToString();
+                if (string.IsNullOrEmpty(subtype))
+                    subtype = fat.GetType().Name;
+                result.Add(new IntegrationTestingSDK.Contracts.BlockState
+                {
+                    EntityId = fat.EntityId,
+                    Type = slim?.Id.TypeId.ToString() ?? "?",
+                    Subtype = subtype,
+                    Enabled = fat.IsWorking
+                });
+            }
+
+            return result;
         }
 
         // ── Entity helpers ─────────────────────────────────────
@@ -227,13 +262,27 @@ namespace IntegrationTestingSDK.Plugin.Application
 
         private static string ReadLcdContent(MyCubeGrid grid)
         {
+            // Find the first non-PB text panel with content.
+            // PB also implements IMyTextSurfaceProvider, so we must skip it.
             foreach (var fat in grid.GetFatBlocks())
-                if (fat is Sandbox.ModAPI.Ingame.IMyTextPanel panel)
-                    return panel.GetText();
+            {
+                if (fat is Sandbox.ModAPI.IMyProgrammableBlock)
+                    continue;
 
-            foreach (var fat in grid.GetFatBlocks())
+                if (fat is Sandbox.ModAPI.Ingame.IMyTextPanel panel)
+                {
+                    var text = panel.GetText();
+                    if (!string.IsNullOrEmpty(text))
+                        return text;
+                }
+
                 if (fat is Sandbox.ModAPI.Ingame.IMyTextSurfaceProvider provider)
-                    return provider.GetSurface(0)?.GetText();
+                {
+                    var text = provider.GetSurface(0)?.GetText();
+                    if (!string.IsNullOrEmpty(text))
+                        return text;
+                }
+            }
 
             return null;
         }

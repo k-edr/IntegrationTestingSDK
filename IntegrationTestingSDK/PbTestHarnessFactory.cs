@@ -37,9 +37,9 @@ namespace IntegrationTestingSDK
             // Deploy plugin + blueprints (idempotent — skips if already done)
             PluginDeployer.Deploy(seBin64);
 
-            // In-process harness: uses SessionComponent.Harness (direct ModAPI, no HTTP).
+            // HTTP-based harness: SDK ↔ HttpApiServer (port 9980).
             // GameProcessManager + WorldManager handle the game lifecycle externally.
-            return new PbTestHarnessInGame(
+            return new PbTestHarnessHttp(
                 new GameProcessManager(seBin64),
                 new WorldManager(templatesDir),
                 scriptCode);

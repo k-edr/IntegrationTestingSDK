@@ -83,6 +83,7 @@
     <Compile Include="Infrastructure\SessionComponent.cs" />
     <Compile Include="Infrastructure\Logger.cs" />
     <Compile Include="Application\PbTestService.cs" />
+    <Compile Include="Application\HttpApiServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

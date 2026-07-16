@@ -1,4 +1,3 @@
-using IntegrationTestingSDK.Contracts;
 using IntegrationTestingSDK.Plugin.Application;
 using VRage.Game;
 using VRage.Game.Components;
@@ -8,24 +7,26 @@ namespace IntegrationTestingSDK.Plugin.Infrastructure
 {
     /// <summary>
     ///     Session component: composition root.
-    ///     Initialises <see cref="PbTestService"/> and registers it
-    ///     in <see cref="HarnessRegistry"/> for SDK-side access.
+    ///     Creates <see cref="PbTestService"/> and starts <see cref="HttpApiServer"/>
+    ///     for SDK-side HTTP access.
     /// </summary>
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation, 1000)]
     public class SessionComponent : MySessionComponentBase
     {
         private PbTestService _testService;
+        private HttpApiServer _apiServer;
 
         public override void Init(MyObjectBuilder_SessionComponent sessionComponent)
         {
             base.Init(sessionComponent);
 
-            Logger.Info("SessionComponent.Init — starting PbTestService");
+            Logger.Info("SessionComponent.Init — starting PbTestService + HTTP API");
 
             _testService = new PbTestService();
-            HarnessRegistry.Current = _testService;
+            _apiServer = new HttpApiServer(_testService);
+            _apiServer.Start();
 
-            Logger.Info("Test harness registered (direct ModAPI)");
+            Logger.Info("HTTP test harness started on port 9980");
         }
 
         public override void UpdateAfterSimulation()
@@ -35,9 +36,9 @@ namespace IntegrationTestingSDK.Plugin.Infrastructure
 
         protected override void UnloadData()
         {
-            HarnessRegistry.Current = null;
+            _apiServer?.Dispose();
             _testService?.Dispose();
-            Logger.Info("Test harness unregistered");
+            Logger.Info("HTTP test harness stopped");
         }
     }
 }
