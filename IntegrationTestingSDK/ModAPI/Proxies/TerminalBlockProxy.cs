@@ -15,7 +15,9 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         // ── IMyEntity ──────────────────────────────────────────
         public long EntityId => _block?.GridPosition != null
-            ? ((long)_block.GridPosition.X << 32) | ((long)_block.GridPosition.Y << 16) | (long)_block.GridPosition.Z
+            ? (long)_block.GridPosition.X * 1_000_000L
+            + (long)_block.GridPosition.Y * 1_000L
+            + (long)_block.GridPosition.Z
             : 0;
 
         public string DisplayName => _block?.Name ?? string.Empty;

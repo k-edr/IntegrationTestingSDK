@@ -57,19 +57,19 @@ namespace IntegrationTestingSDK.Client
             if (!Directory.Exists(templatePath))
                 throw new DirectoryNotFoundException($"Template world not found: {templatePath}");
 
+            // Copy to temp first, then rename — avoids partial copy if something fails midway
+            var tmpPath = destPath + "__tmp_" + Guid.NewGuid().ToString("N");
+            SdkLog.Info($"Copying template: {templatePath} → {tmpPath}");
+            CopyDirectory(templatePath, tmpPath);
+            FixSessionName(tmpPath, workingCopyName);
+
             if (Directory.Exists(destPath))
             {
                 SdkLog.Info($"Removing existing save: {destPath}");
-                try { Directory.Delete(destPath, true); }
-                catch (Exception ex)
-                {
-                    SdkLog.Warn($"Failed to delete existing save: {ex.Message}");
-                }
+                Directory.Delete(destPath, true);
             }
 
-            SdkLog.Info($"Copying template: {templatePath} → {destPath}");
-            CopyDirectory(templatePath, destPath);
-            FixSessionName(destPath, workingCopyName);
+            Directory.Move(tmpPath, destPath);
             SdkLog.Info($"World copy ready: {destPath}");
         }
 
