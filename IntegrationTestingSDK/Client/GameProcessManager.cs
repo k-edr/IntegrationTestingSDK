@@ -28,10 +28,11 @@ namespace IntegrationTestingSDK.Client
             SdkLog.Info($"Launching SE: {_seExePath}");
             KillExisting();
 
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var psi = new ProcessStartInfo
             {
                 FileName = _seExePath,
-                Arguments = $"-appdata \"%APPDATA%\\SpaceEngineers\"",
+                Arguments = $"-appdata \"{Path.Combine(appData, "SpaceEngineers")}\"",
                 UseShellExecute = false,
                 WorkingDirectory = Path.GetDirectoryName(_seExePath)
             };
@@ -49,9 +50,14 @@ namespace IntegrationTestingSDK.Client
 
         public void Kill()
         {
-            if (_process == null || _process.HasExited)
+            if (_process == null)
+                return;
+
+            if (_process.HasExited)
             {
-                SdkLog.Info("Kill: process already exited or null, skipping");
+                SdkLog.Info("Kill: process already exited, disposing");
+                _process.Dispose();
+                _process = null;
                 return;
             }
 

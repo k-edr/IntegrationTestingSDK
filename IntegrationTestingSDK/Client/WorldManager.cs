@@ -24,11 +24,25 @@ namespace IntegrationTestingSDK.Client
                 throw new DirectoryNotFoundException($"Saves directory not found: {saves}");
 
             var dirs = Directory.GetDirectories(saves);
-            if (dirs.Length != 1)
-                throw new InvalidOperationException(
-                    $"Expected exactly 1 Steam ID folder under Saves, found {dirs.Length}");
+            var candidates = new System.Collections.Generic.List<string>();
+            foreach (var d in dirs)
+            {
+                var name = Path.GetFileName(d);
+                if (!name.Equals("Cloud", StringComparison.OrdinalIgnoreCase)
+                    && long.TryParse(name, out _))
+                {
+                    candidates.Add(d);
+                }
+            }
 
-            _savesRoot = dirs[0];
+            if (candidates.Count == 0)
+                throw new InvalidOperationException(
+                    $"No numeric Steam ID folder found under Saves directory: {saves}");
+
+            // Sort by write time descending to get the most recent one
+            candidates.Sort((a, b) =>
+                Directory.GetLastWriteTimeUtc(b).CompareTo(Directory.GetLastWriteTimeUtc(a)));
+            _savesRoot = candidates[0];
             SdkLog.Info($"WorldManager: Saves root = {_savesRoot}");
         }
 
