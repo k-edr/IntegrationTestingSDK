@@ -78,7 +78,7 @@ namespace IntegrationTestingSDK.Client
 
         // ── In-game operations (HTTP) ────────────────────────────
 
-        public IReadOnlyList<long> SpawnTestGrid(string blueprintName, double x, double y, double z)
+        public IReadOnlyList<SpawnedGrid> SpawnTestGrid(string blueprintName, double x, double y, double z)
         {
             var result = Post<SpawnResponse>(Url(ApiRoutes.Spawn), new SpawnRequest
             {
@@ -86,13 +86,13 @@ namespace IntegrationTestingSDK.Client
                 Position = new SpawnPosition { X = x, Y = y, Z = z }
             });
 
-            var ids = new List<long>();
+            var grids = new List<SpawnedGrid>();
             if (result?.Grids != null)
             {
                 foreach (var g in result.Grids)
-                    ids.Add(g.Id);
+                    grids.Add(new SpawnedGrid(g.Id, g.Blocks, this));
             }
-            return ids;
+            return grids;
         }
 
         public void RemoveTestGrid(long gridId)
@@ -120,7 +120,6 @@ namespace IntegrationTestingSDK.Client
 
         public string GetLcdContent(long gridId)
         {
-            // Initial delay — give the game a tick to flush pending WriteText.
             Thread.Sleep(_lcdPollInterval);
 
             var deadline = DateTime.UtcNow + _lcdPollTimeout;
@@ -171,6 +170,43 @@ namespace IntegrationTestingSDK.Client
                 });
             }
             return result;
+        }
+
+        // ── Block-level API ────────────────────────────────────────
+
+        public bool ExecuteBlockAction(long gridId, int x, int y, int z, string actionId)
+        {
+            try
+            {
+                Post<object>(Url(ApiRoutes.BlockAction, gridId, x, y, z),
+                    new BlockActionRequest { ActionId = actionId });
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public string GetBlockProperty(long gridId, int x, int y, int z, string propertyId)
+        {
+            var result = Get<PropertyResponse>(
+                Url(ApiRoutes.BlockProperty, gridId, x, y, z, propertyId));
+            return result?.Value;
+        }
+
+        public bool SetBlockProperty(long gridId, int x, int y, int z, string propertyId, string value)
+        {
+            try
+            {
+                Put(Url(ApiRoutes.BlockProperty, gridId, x, y, z, propertyId),
+                    new SetPropertyRequest { Value = value });
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public void Dispose()

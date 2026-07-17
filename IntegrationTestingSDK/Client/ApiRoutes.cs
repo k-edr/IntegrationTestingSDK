@@ -31,5 +31,13 @@ namespace IntegrationTestingSDK.Client
         public const string GridRun    = "grids/{0}/run";
         public const string GridLcd    = "grids/{0}/lcd";
         public const string GridBlocks = "grids/{0}/blocks";
+
+        // ── Block actions / properties ─────────────────────
+
+        /// <summary>POST block action. <c>{0}</c>=gridId, <c>{1}</c>=x, <c>{2}</c>=y, <c>{3}</c>=z.</summary>
+        public const string BlockAction = "grids/{0}/blocks/{1}/{2}/{3}/action";
+
+        /// <summary>GET/PUT block property. <c>{0}</c>=gridId, <c>{1}</c>=x, <c>{2}</c>=y, <c>{3}</c>=z, <c>{4}</c>=propId.</summary>
+        public const string BlockProperty = "grids/{0}/blocks/{1}/{2}/{3}/properties/{4}";
     }
 }

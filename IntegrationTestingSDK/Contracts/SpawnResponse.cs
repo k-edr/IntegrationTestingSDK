@@ -9,15 +9,24 @@ namespace IntegrationTestingSDK.Contracts
     public class SpawnResponse
     {
         [JsonPropertyName("grids")]
-        public List<GridRef> Grids { get; set; } = new();
+        public List<GridDto> Grids { get; set; } = new();
     }
 
     /// <summary>
-    ///     Minimal grid reference returned in spawn response.
+    ///     Grid info returned in the spawn response, including block list.
     /// </summary>
-    public class GridRef
+    public class GridDto
     {
         [JsonPropertyName("id")]
         public long Id { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("position")]
+        public SpawnPosition Position { get; set; }
+
+        [JsonPropertyName("blocks")]
+        public List<BlockDto> Blocks { get; set; } = new();
     }
 }

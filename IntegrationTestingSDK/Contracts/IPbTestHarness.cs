@@ -4,10 +4,9 @@ using System.Collections.Generic;
 namespace IntegrationTestingSDK.Contracts
 {
     /// <summary>
-    ///     Contract for running PB scripts in the real game.
-    ///     Operates on native game entity IDs (<c>long EntityId</c>) —
-    ///     the primary key of every in-game entity.
-    ///     Name-based lookup is secondary.
+    ///     Contract for running PB scripts and interacting with blocks
+    ///     in the real game. Block-level methods use direct terminal actions,
+    ///     not script commands.
     /// </summary>
     public interface IPbTestHarness : IDisposable
     {
@@ -23,9 +22,9 @@ namespace IntegrationTestingSDK.Contracts
 
         /// <summary>
         ///     Spawn a grid from a blueprint at the given position.
-        ///     Returns the entity IDs of all spawned grids.
+        ///     Returns typed wrappers with block positions pre-resolved.
         /// </summary>
-        IReadOnlyList<long> SpawnTestGrid(string blueprintName, double x, double y, double z);
+        IReadOnlyList<SpawnedGrid> SpawnTestGrid(string blueprintName, double x, double y, double z);
 
         /// <summary>
         ///     Remove the spawned grid by its entity ID.
@@ -41,9 +40,6 @@ namespace IntegrationTestingSDK.Contracts
         /// <summary>
         ///     Compile and run the script on the grid's PB.
         /// </summary>
-        /// <param name="gridId">Target grid entity ID.</param>
-        /// <param name="argument">Argument passed to <c>Main</c>. Null for no argument.</param>
-        /// <returns>The captured Echo output from the PB.</returns>
         string RunScript(long gridId, string argument = null);
 
         /// <summary>
@@ -55,5 +51,22 @@ namespace IntegrationTestingSDK.Contracts
         ///     Read the Enabled state of every block on the grid.
         /// </summary>
         IReadOnlyList<BlockState> GetBlockStates(long gridId);
+
+        // ── Block-level API (direct terminal actions) ────────────
+
+        /// <summary>
+        ///     Execute a terminal action on a block (e.g. "OnOff_Off").
+        /// </summary>
+        bool ExecuteBlockAction(long gridId, int x, int y, int z, string actionId);
+
+        /// <summary>
+        ///     Get a terminal property value (e.g. "Color").
+        /// </summary>
+        string GetBlockProperty(long gridId, int x, int y, int z, string propertyId);
+
+        /// <summary>
+        ///     Set a terminal property value.
+        /// </summary>
+        bool SetBlockProperty(long gridId, int x, int y, int z, string propertyId, string value);
     }
 }
