@@ -6,8 +6,9 @@ namespace IntegrationTestingSDK.Contracts
 {
     /// <summary>
     ///     Typed wrapper around a spawned grid.
-    ///     Provides name-based block lookup and high-level operations
-    ///     (turn on/off, set color) that delegate to the harness block API.
+    ///     Provides name-based block lookup and typed block factories
+    ///     (<see cref="Light"/>, <see cref="Antenna"/>) for
+    ///     script-like direct interaction with the game.
     /// </summary>
     public class SpawnedGrid
     {
@@ -49,33 +50,35 @@ namespace IntegrationTestingSDK.Contracts
         /// <summary>Check if a block with the given name exists.</summary>
         public bool HasBlock(string name) => _blocksByName.ContainsKey(name);
 
-        // ── High-level block operations ────────────────────────────
+        // ── Typed block factories ──────────────────────────────────
 
-        /// <summary>Turn a block on.</summary>
-        public bool TurnOn(string blockName) =>
-            ExecuteAction(Block(blockName), "OnOff_On");
+        /// <summary>Get a typed light block wrapper (e.g. <c>_grid.Light("Lamp 1")</c>).</summary>
+        public LightBlock Light(string name) => new(this, Block(name));
 
-        /// <summary>Turn a block off.</summary>
-        public bool TurnOff(string blockName) =>
-            ExecuteAction(Block(blockName), "OnOff_Off");
+        /// <summary>Get a typed antenna block wrapper.</summary>
+        public AntennaBlock Antenna(string name) => new(this, Block(name));
 
-        /// <summary>Toggle a block's power state.</summary>
-        public bool Toggle(string blockName) =>
-            ExecuteAction(Block(blockName), "OnOff");
+        // ── Block-level API (internal — used by BlockWrapper) ──────
 
-        /// <summary>Set a terminal property on a block.</summary>
-        public bool SetProperty(string blockName, string propertyId, string value)
+        internal bool ExecuteBlockAction(BlockDto block, string actionId)
         {
-            var b = Block(blockName);
-            return _harness.SetBlockProperty(Id, b.GridPosition.X, b.GridPosition.Y, b.GridPosition.Z, propertyId, value);
+            return _harness.ExecuteBlockAction(
+                Id, block.GridPosition.X, block.GridPosition.Y, block.GridPosition.Z, actionId);
         }
 
-        /// <summary>Get a terminal property value from a block.</summary>
-        public string GetProperty(string blockName, string propertyId)
+        internal string GetBlockProperty(BlockDto block, string propertyId)
         {
-            var b = Block(blockName);
-            return _harness.GetBlockProperty(Id, b.GridPosition.X, b.GridPosition.Y, b.GridPosition.Z, propertyId);
+            return _harness.GetBlockProperty(
+                Id, block.GridPosition.X, block.GridPosition.Y, block.GridPosition.Z, propertyId);
         }
+
+        internal bool SetBlockProperty(BlockDto block, string propertyId, string value)
+        {
+            return _harness.SetBlockProperty(
+                Id, block.GridPosition.X, block.GridPosition.Y, block.GridPosition.Z, propertyId, value);
+        }
+
+        // ── Grid-level queries ─────────────────────────────────────
 
         /// <summary>Get all blocks matching a subtype filter (e.g. "Light").</summary>
         public List<BlockDto> FilterBlocksBySubtype(string subtypeContains)
@@ -88,13 +91,5 @@ namespace IntegrationTestingSDK.Contracts
 
         /// <summary>Get all block states for this grid.</summary>
         public IReadOnlyList<BlockState> GetBlockStates() => _harness.GetBlockStates(Id);
-
-        // ── Private helpers ────────────────────────────────────────
-
-        private bool ExecuteAction(BlockDto block, string actionId)
-        {
-            return _harness.ExecuteBlockAction(
-                Id, block.GridPosition.X, block.GridPosition.Y, block.GridPosition.Z, actionId);
-        }
     }
 }
