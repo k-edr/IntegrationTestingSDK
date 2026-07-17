@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using IntegrationTestingSDK.ModAPI.Interfaces;
+using IntegrationTestingSDK.ModAPI.Proxies;
 
 namespace IntegrationTestingSDK.Contracts
 {
@@ -14,12 +16,28 @@ namespace IntegrationTestingSDK.Contracts
     {
         private readonly IPbTestHarness _harness;
         private readonly Dictionary<string, BlockDto> _blocksByName;
+        private GridTerminalSystemProxy _gridTerminalSystem;
 
         /// <summary>Game entity ID of the grid.</summary>
         public long Id { get; }
 
         /// <summary>All blocks keyed by blueprint name (case-insensitive).</summary>
         public IReadOnlyDictionary<string, BlockDto> Blocks => _blocksByName;
+
+        /// <summary>
+        ///     ModAPI-like grid terminal system for block discovery and interaction.
+        ///     Use <c>GetBlocksOfType&lt;IMyLightingBlock&gt;(...)</c> or
+        ///     <c>GetBlockWithName("Antenna")</c> to obtain typed block proxies.
+        /// </summary>
+        public IMyGridTerminalSystem GridTerminalSystem
+        {
+            get
+            {
+                if (_gridTerminalSystem == null)
+                    _gridTerminalSystem = new GridTerminalSystemProxy(_harness, Id, _blocksByName);
+                return _gridTerminalSystem;
+            }
+        }
 
         internal SpawnedGrid(long id, IEnumerable<BlockDto> blocks, IPbTestHarness harness)
         {

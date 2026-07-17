@@ -190,9 +190,17 @@ namespace IntegrationTestingSDK.Client
 
         public string GetBlockProperty(long gridId, int x, int y, int z, string propertyId)
         {
-            var result = Get<PropertyResponse>(
-                Url(ApiRoutes.BlockProperty, gridId, x, y, z, propertyId));
-            return result?.Value;
+            try
+            {
+                var result = Get<PropertyResponse>(
+                    Url(ApiRoutes.BlockProperty, gridId, x, y, z, propertyId));
+                return result?.Value;
+            }
+            catch (InvalidOperationException)
+            {
+                // Property not found (404), terminal doesn't expose it
+                return null;
+            }
         }
 
         public bool SetBlockProperty(long gridId, int x, int y, int z, string propertyId, string value)

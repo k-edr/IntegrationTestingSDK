@@ -17,5 +17,12 @@ namespace IntegrationTestingSDK.Contracts
 
         [JsonPropertyName("gridPosition")]
         public Vector3IDto GridPosition { get; set; }
+
+        /// <summary>
+        ///     Entity ID assigned by the game when the block is spawned.
+        ///     Set from the spawn response if available; defaults to 0.
+        /// </summary>
+        [JsonPropertyName("entityId")]
+        public long EntityId { get; set; }
     }
 }
