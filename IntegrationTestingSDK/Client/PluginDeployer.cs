@@ -87,17 +87,20 @@ namespace IntegrationTestingSDK.Client
             if (!File.Exists(spawnerDll))
                 throw new FileNotFoundException($"GridSpawner.Plugin.dll not found: {spawnerDll}");
 
+            // Resolve config folder from the plugin path (Debug or Release)
+            var configFolder = Path.GetFileName(spawnerPluginBin.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+
             CopyIfNewer(spawnerDll, Path.Combine(pluginsDir, "GridSpawner.Plugin.dll"));
 
             // GridSpawner.Shared
             var sharedDll = Path.Combine(reposRoot,
-                "MySpawnerController", "GridSpawner.Shared", "bin", "Release", "netstandard2.0", "GridSpawner.Shared.dll");
+                "MySpawnerController", "GridSpawner.Shared", "bin", configFolder, "netstandard2.0", "GridSpawner.Shared.dll");
             if (File.Exists(sharedDll))
                 CopyIfNewer(sharedDll, Path.Combine(pluginsDir, "GridSpawner.Shared.dll"));
 
             // GridSpawner.Api
             var apiDll = Path.Combine(reposRoot,
-                "MySpawnerController", "GridSpawner.Api", "bin", "Release", "netstandard2.0", "GridSpawner.Api.dll");
+                "MySpawnerController", "GridSpawner.Api", "bin", configFolder, "netstandard2.0", "GridSpawner.Api.dll");
             if (File.Exists(apiDll))
                 CopyIfNewer(apiDll, Path.Combine(pluginsDir, "GridSpawner.Api.dll"));
         }
