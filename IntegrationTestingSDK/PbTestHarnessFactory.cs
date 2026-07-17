@@ -39,13 +39,17 @@ namespace IntegrationTestingSDK
 
             var harnessConfig = new PbTestHarnessConfig
             {
+                ApiScheme = config.apiScheme,
+                ApiHost = config.apiHost,
                 ApiPort = config.apiPort,
                 HealthPollIntervalSeconds = config.healthPollIntervalSeconds,
                 SessionTimeoutMinutes = config.sessionTimeoutMinutes,
-                HttpTimeoutSeconds = config.httpTimeoutSeconds
+                HttpTimeoutSeconds = config.httpTimeoutSeconds,
+                LcdPollTimeoutSeconds = config.lcdPollTimeoutSeconds,
+                LcdPollIntervalMs = config.lcdPollIntervalMs
             };
 
-            SdkLog.Info($"GridSpawner API: http://localhost:{harnessConfig.ApiPort}/api/v1");
+            SdkLog.Info($"GridSpawner API: {harnessConfig.ApiScheme}://{harnessConfig.ApiHost}:{harnessConfig.ApiPort}/api/v1");
 
             return new PbTestHarnessHttp(
                 new GameProcessManager(seBin64),
@@ -59,10 +63,14 @@ namespace IntegrationTestingSDK
         private class BuildConfig
         {
             public string seBin64 { get; set; }
+            public string apiScheme { get; set; } = "http";
+            public string apiHost { get; set; } = "localhost";
             public int apiPort { get; set; } = 9997;
             public int healthPollIntervalSeconds { get; set; } = 2;
             public int sessionTimeoutMinutes { get; set; } = 3;
             public int httpTimeoutSeconds { get; set; } = 30;
+            public double lcdPollTimeoutSeconds { get; set; } = 0.5;
+            public int lcdPollIntervalMs { get; set; } = 50;
         }
 
         private static BuildConfig LoadConfig()

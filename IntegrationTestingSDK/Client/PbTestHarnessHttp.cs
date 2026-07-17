@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Text;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading;
 using IntegrationTestingSDK.Contracts;
@@ -20,6 +20,8 @@ namespace IntegrationTestingSDK.Client
         private readonly string _apiBase;
         private readonly TimeSpan _healthPollInterval;
         private readonly TimeSpan _sessionTimeout;
+        private readonly TimeSpan _lcdPollTimeout;
+        private readonly TimeSpan _lcdPollInterval;
 
         private readonly GameProcessManager _game;
         private readonly WorldManager _worlds;
@@ -39,11 +41,19 @@ namespace IntegrationTestingSDK.Client
             _worlds = worlds;
             _scriptCode = scriptCode;
 
-            _apiBase = $"http://localhost:{config.ApiPort}/api/v1";
+            _apiBase = $"{config.ApiScheme}://{config.ApiHost}:{config.ApiPort}/api/v1";
             _healthPollInterval = TimeSpan.FromSeconds(config.HealthPollIntervalSeconds);
             _sessionTimeout = TimeSpan.FromMinutes(config.SessionTimeoutMinutes);
+            _lcdPollTimeout = TimeSpan.FromSeconds(config.LcdPollTimeoutSeconds);
+            _lcdPollInterval = TimeSpan.FromMilliseconds(config.LcdPollIntervalMs);
             _http = new HttpClient { Timeout = TimeSpan.FromSeconds(config.HttpTimeoutSeconds) };
         }
+
+        // ── URL builder ─────────────────────────────────────────
+
+        private string Url(string route) => $"{_apiBase}/{route}";
+        private string Url(string template, params object[] args) =>
+            $"{_apiBase}/{string.Format(template, args)}";
 
         // ── World lifecycle ──────────────────────────────────────
 
@@ -70,26 +80,24 @@ namespace IntegrationTestingSDK.Client
 
         public IReadOnlyList<long> SpawnTestGrid(string blueprintName, double x, double y, double z)
         {
-            // TODO: Replace manual JSON with models
-            var body = $"{{\"blueprint\":\"{EscapeJson(blueprintName)}\",\"position\":{{\"x\":{x},\"y\":{y},\"z\":{z}}}}}";
-            var resp = Post($"{_apiBase}/spawn", body);
-
-            using var doc = JsonDocument.Parse(resp);
-            var ids = new List<long>();
-            if (doc.RootElement.TryGetProperty("grids", out var arr))
+            var result = Post<SpawnResponse>(Url(ApiRoutes.Spawn), new SpawnRequest
             {
-                foreach (var el in arr.EnumerateArray())
-                {
-                    if (el.TryGetProperty("id", out var idProp))
-                        ids.Add(idProp.GetInt64());
-                }
+                Blueprint = blueprintName,
+                Position = new SpawnPosition { X = x, Y = y, Z = z }
+            });
+
+            var ids = new List<long>();
+            if (result?.Grids != null)
+            {
+                foreach (var g in result.Grids)
+                    ids.Add(g.Id);
             }
             return ids;
         }
 
         public void RemoveTestGrid(long gridId)
         {
-            Delete($"{_apiBase}/grids/{gridId}");
+            Delete(Url(ApiRoutes.GridById, gridId));
         }
 
         public void UploadScript(long gridId)
@@ -97,45 +105,35 @@ namespace IntegrationTestingSDK.Client
             if (string.IsNullOrEmpty(_scriptCode))
                 throw new InvalidOperationException("No script code provided.");
 
-            // TODO: Replace manual JSON with models
-            var body = $"{{\"code\":\"{EscapeJson(_scriptCode)}\"}}";
-            Put($"{_apiBase}/grids/{gridId}/script", body);
+            Put(Url(ApiRoutes.GridScript, gridId), new UploadScriptRequest
+            {
+                Code = _scriptCode
+            });
         }
 
         public string RunScript(long gridId, string argument = null)
         {
-            // TODO: Replace manual JSON with models
-            var body = argument != null
-                ? $"{{\"argument\":\"{EscapeJson(argument)}\"}}"
-                : "{}";
-            var resp = Post($"{_apiBase}/grids/{gridId}/run", body);
-
-            using var doc = JsonDocument.Parse(resp);
-            return doc.RootElement.TryGetProperty("echo", out var echoProp)
-                ? echoProp.GetString() ?? ""
-                : "";
+            var body = new RunScriptRequest { Argument = argument ?? "" };
+            var result = Post<RunScriptResponse>(Url(ApiRoutes.GridRun, gridId), body);
+            return result?.Echo ?? "";
         }
 
-        // TODO: Rework without Thread.Sleep — poll with a proper timeout instead
         public string GetLcdContent(long gridId)
         {
-            // Give the game a tick to flush any pending WriteText.
-            Thread.Sleep(200);
+            // Initial delay — give the game a tick to flush pending WriteText.
+            Thread.Sleep(_lcdPollInterval);
 
-            for (int attempt = 0; attempt < 5; attempt++)
+            var deadline = DateTime.UtcNow + _lcdPollTimeout;
+            while (DateTime.UtcNow < deadline)
             {
-                var resp = Get($"{_apiBase}/grids/{gridId}/lcd");
-
-                using var doc = JsonDocument.Parse(resp);
-                var content = doc.RootElement.TryGetProperty("content", out var cProp)
-                    ? cProp.GetString() ?? ""
-                    : "";
+                var result = Get<LcdResponse>(Url(ApiRoutes.GridLcd, gridId));
+                var content = result?.Content ?? "";
 
                 if (!string.IsNullOrEmpty(content))
                     return content;
 
-                if (attempt < 4)
-                    Thread.Sleep(50);
+                if (DateTime.UtcNow + _lcdPollInterval < deadline)
+                    Thread.Sleep(_lcdPollInterval);
             }
 
             return "";
@@ -143,17 +141,15 @@ namespace IntegrationTestingSDK.Client
 
         public IReadOnlyList<BlockState> GetBlockStates(long gridId)
         {
-            var resp = Get($"{_apiBase}/grids/{gridId}/blocks");
+            var blocks = Get<List<TerminalBlockDto>>(Url(ApiRoutes.GridBlocks, gridId))
+                ?? new List<TerminalBlockDto>();
 
-            using var doc = JsonDocument.Parse(resp);
-            var result = new List<BlockState>();
-            foreach (var el in doc.RootElement.EnumerateArray())
+            var result = new List<BlockState>(blocks.Count);
+            foreach (var el in blocks)
             {
-                var definition = el.TryGetProperty("definition", out var d) ? d.GetString() ?? "" : "";
                 var type = "?";
                 var subtype = "?";
-
-                // TerminalBlockDto.Type/Definition is "MyObjectBuilder_Reactor/SmallBlockSmallGenerator"
+                var definition = el.Definition ?? "";
                 var slashIdx = definition.IndexOf('/');
                 if (slashIdx >= 0)
                 {
@@ -163,15 +159,15 @@ namespace IntegrationTestingSDK.Client
                 else if (!string.IsNullOrEmpty(definition))
                 {
                     subtype = definition;
-                    type = el.TryGetProperty("type", out var t) ? t.GetString() ?? "?" : "?";
+                    type = el.Type ?? "?";
                 }
 
                 result.Add(new BlockState
                 {
-                    EntityId = el.TryGetProperty("entityId", out var id) ? id.GetInt64() : 0,
+                    EntityId = el.EntityId,
                     Type = type,
                     Subtype = subtype,
-                    Enabled = el.TryGetProperty("isWorking", out var ew) && ew.GetBoolean()
+                    Enabled = el.IsWorking
                 });
             }
             return result;
@@ -185,40 +181,38 @@ namespace IntegrationTestingSDK.Client
             try { _http.Dispose(); } catch { }
         }
 
-        // ── HTTP helpers ─────────────────────────────────────────
+        // ── HTTP helpers (generic) ───────────────────────────────
 
-        private string Get(string url)
+        private T Get<T>(string url)
         {
             var resp = _http.GetAsync(url).Result;
-            var body = resp.Content.ReadAsStringAsync().Result;
-            if (!resp.IsSuccessStatusCode)
-                throw new InvalidOperationException($"HTTP {resp.StatusCode}: {body}");
-            return body;
+            EnsureSuccess(resp);
+            return resp.Content.ReadFromJsonAsync<T>().Result;
         }
 
-        private string Post(string url, string json)
+        private T Post<T>(string url, object body)
         {
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var content = JsonContent.Create(body, body.GetType());
             var resp = _http.PostAsync(url, content).Result;
-            var body = resp.Content.ReadAsStringAsync().Result;
-            if (!resp.IsSuccessStatusCode)
-                throw new InvalidOperationException($"HTTP {resp.StatusCode}: {body}");
-            return body;
+            EnsureSuccess(resp);
+            return resp.Content.ReadFromJsonAsync<T>().Result;
         }
 
-        private string Put(string url, string json)
+        private void Put(string url, object body)
         {
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var content = JsonContent.Create(body, body.GetType());
             var resp = _http.PutAsync(url, content).Result;
-            var body = resp.Content.ReadAsStringAsync().Result;
-            if (!resp.IsSuccessStatusCode)
-                throw new InvalidOperationException($"HTTP {resp.StatusCode}: {body}");
-            return body;
+            EnsureSuccess(resp);
         }
 
         private void Delete(string url)
         {
             var resp = _http.DeleteAsync(url).Result;
+            EnsureSuccess(resp);
+        }
+
+        private static void EnsureSuccess(HttpResponseMessage resp)
+        {
             if (!resp.IsSuccessStatusCode)
             {
                 var body = resp.Content.ReadAsStringAsync().Result;
@@ -237,9 +231,9 @@ namespace IntegrationTestingSDK.Client
             {
                 try
                 {
-                    var resp = _http.GetAsync($"{_apiBase}/health").Result;
-                    var body = resp.Content.ReadAsStringAsync().Result;
-                    if (body.Contains("\"ready\":true"))
+                    var resp = _http.GetAsync(Url(ApiRoutes.Health)).Result;
+                    var health = resp.Content.ReadFromJsonAsync<JsonElement>().Result;
+                    if (health.TryGetProperty("ready", out var ready) && ready.GetBoolean())
                     {
                         var elapsed = timeout.TotalSeconds - (deadline - DateTime.UtcNow).TotalSeconds;
                         SdkLog.Info($"Session ready after {elapsed:N0}s");
@@ -267,16 +261,9 @@ namespace IntegrationTestingSDK.Client
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
-            var json = $"{{\"worldName\": \"{worldName}\"}}";
+            var json = JsonSerializer.Serialize(new { worldName });
             File.WriteAllText(configPath, json);
             SdkLog.Info($"AutoWorldLoader config written: {configPath} → {worldName}");
-        }
-
-        private static string EscapeJson(string s)
-        {
-            if (s == null) return "";
-            return s.Replace("\\", "\\\\").Replace("\"", "\\\"")
-                    .Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t");
         }
     }
 }

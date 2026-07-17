@@ -46,7 +46,11 @@ namespace IntegrationTestingSDK.Client
             if (Directory.Exists(destPath))
             {
                 SdkLog.Info($"Removing existing save: {destPath}");
-                Directory.Delete(destPath, true);
+                try { Directory.Delete(destPath, true); }
+                catch (Exception ex)
+                {
+                    SdkLog.Warn($"Failed to delete existing save: {ex.Message}");
+                }
             }
 
             SdkLog.Info($"Copying template: {templatePath} → {destPath}");
@@ -64,7 +68,11 @@ namespace IntegrationTestingSDK.Client
             if (Directory.Exists(path))
             {
                 SdkLog.Info($"Deleting world: {path}");
-                Directory.Delete(path, true);
+                try { Directory.Delete(path, true); }
+                catch (Exception ex)
+                {
+                    SdkLog.Warn($"Failed to delete world: {ex.Message}");
+                }
                 SdkLog.Info("World deleted");
             }
             else
@@ -77,18 +85,25 @@ namespace IntegrationTestingSDK.Client
 
         private static void CopyDirectory(string sourceDir, string destDir)
         {
-            Directory.CreateDirectory(destDir);
-
-            foreach (var file in Directory.GetFiles(sourceDir))
+            try
             {
-                var destFile = Path.Combine(destDir, Path.GetFileName(file));
-                File.Copy(file, destFile, overwrite: true);
+                Directory.CreateDirectory(destDir);
+
+                foreach (var file in Directory.GetFiles(sourceDir))
+                {
+                    var destFile = Path.Combine(destDir, Path.GetFileName(file));
+                    File.Copy(file, destFile, overwrite: true);
+                }
+
+                foreach (var dir in Directory.GetDirectories(sourceDir))
+                {
+                    var destSubDir = Path.Combine(destDir, Path.GetFileName(dir));
+                    CopyDirectory(dir, destSubDir);
+                }
             }
-
-            foreach (var dir in Directory.GetDirectories(sourceDir))
+            catch (Exception ex)
             {
-                var destSubDir = Path.Combine(destDir, Path.GetFileName(dir));
-                CopyDirectory(dir, destSubDir);
+                SdkLog.Warn($"CopyDirectory failed: {sourceDir} → {destDir}: {ex.Message}");
             }
         }
 

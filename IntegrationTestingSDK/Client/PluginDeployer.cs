@@ -110,7 +110,12 @@ namespace IntegrationTestingSDK.Client
             var dllPath = Path.Combine(pluginsDir, "GridSpawner.Plugin.dll");
 
             var doc = new XmlDocument { PreserveWhitespace = true };
-            doc.Load(configXml);
+            try { doc.Load(configXml); }
+            catch (Exception ex)
+            {
+                SdkLog.Warn($"Failed to load config.xml: {ex.Message}");
+                return;
+            }
 
             var pluginsNode = doc.SelectSingleNode("//Plugins");
             if (pluginsNode == null)
@@ -131,7 +136,13 @@ namespace IntegrationTestingSDK.Client
             var idElem = doc.CreateElement("Id");
             idElem.InnerText = dllPath;
             pluginsNode.AppendChild(idElem);
-            doc.Save(configXml);
+
+            try { doc.Save(configXml); }
+            catch (Exception ex)
+            {
+                SdkLog.Warn($"Failed to save config.xml: {ex.Message}");
+                return;
+            }
 
             SdkLog.Info($"Registered plugin in config.xml: {dllPath}");
         }
@@ -154,17 +165,24 @@ namespace IntegrationTestingSDK.Client
 
             foreach (var bpDir in Directory.GetDirectories(blueprintSource))
             {
-                var bpName = Path.GetFileName(bpDir);
-                var destDir = Path.Combine(destRoot, bpName);
-
-                if (Directory.Exists(destDir))
+                try
                 {
-                    SdkLog.Info($"Blueprint already exists: {bpName}");
-                    continue;
-                }
+                    var bpName = Path.GetFileName(bpDir);
+                    var destDir = Path.Combine(destRoot, bpName);
 
-                CopyDirectory(bpDir, destDir);
-                SdkLog.Info($"Copied blueprint: {bpName}");
+                    if (Directory.Exists(destDir))
+                    {
+                        SdkLog.Info($"Blueprint already exists: {bpName}");
+                        continue;
+                    }
+
+                    CopyDirectory(bpDir, destDir);
+                    SdkLog.Info($"Copied blueprint: {bpName}");
+                }
+                catch (Exception ex)
+                {
+                    SdkLog.Warn($"Failed to copy blueprint from {bpDir}: {ex.Message}");
+                }
             }
         }
 
@@ -172,28 +190,44 @@ namespace IntegrationTestingSDK.Client
 
         private static void CopyIfNewer(string source, string dest)
         {
-            if (File.Exists(dest))
+            try
             {
-                var srcTime = File.GetLastWriteTimeUtc(source);
-                var dstTime = File.GetLastWriteTimeUtc(dest);
-                if (dstTime >= srcTime)
+                if (File.Exists(dest))
                 {
-                    SdkLog.Info($"DLL up to date: {Path.GetFileName(dest)}");
-                    return;
+                    var srcTime = File.GetLastWriteTimeUtc(source);
+                    var dstTime = File.GetLastWriteTimeUtc(dest);
+                    if (dstTime >= srcTime)
+                    {
+                        SdkLog.Info($"DLL up to date: {Path.GetFileName(dest)}");
+                        return;
+                    }
                 }
-            }
 
-            File.Copy(source, dest, overwrite: true);
-            SdkLog.Info($"Copied: {Path.GetFileName(dest)}");
+                File.Copy(source, dest, overwrite: true);
+                SdkLog.Info($"Copied: {Path.GetFileName(dest)}");
+            }
+            catch (Exception ex)
+            {
+                SdkLog.Warn($"Copy failed: {source} → {dest}: {ex.Message}");
+            }
         }
 
         private static void CopyDirectory(string sourceDir, string destDir)
         {
-            Directory.CreateDirectory(destDir);
-            foreach (var file in Directory.GetFiles(sourceDir))
-                File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
-            foreach (var subDir in Directory.GetDirectories(sourceDir))
-                CopyDirectory(subDir, Path.Combine(destDir, Path.GetFileName(subDir)));
+            try
+            {
+                Directory.CreateDirectory(destDir);
+
+                foreach (var file in Directory.GetFiles(sourceDir))
+                    File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
+
+                foreach (var subDir in Directory.GetDirectories(sourceDir))
+                    CopyDirectory(subDir, Path.Combine(destDir, Path.GetFileName(subDir)));
+            }
+            catch (Exception ex)
+            {
+                SdkLog.Warn($"CopyDirectory failed: {sourceDir} → {destDir}: {ex.Message}");
+            }
         }
     }
 }
