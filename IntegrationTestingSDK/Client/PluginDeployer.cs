@@ -74,6 +74,12 @@ namespace IntegrationTestingSDK.Client
                 "MySpawnerController", "GridSpawner.Plugin", "bin", "Release");
 
             if (!Directory.Exists(spawnerPluginBin))
+            {
+                spawnerPluginBin = Path.Combine(reposRoot,
+                    "MySpawnerController", "GridSpawner.Plugin", "bin", "Debug");
+            }
+
+            if (!Directory.Exists(spawnerPluginBin))
                 throw new DirectoryNotFoundException(
                     $"GridSpawner.Plugin output not found: {spawnerPluginBin}. Build MySpawnerController first (build.ps1).");
 

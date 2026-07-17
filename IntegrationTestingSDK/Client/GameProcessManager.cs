@@ -59,8 +59,10 @@ namespace IntegrationTestingSDK.Client
             try
             {
                 _process.Kill();
-                _process.WaitForExit(10_000);
-                SdkLog.Info("SE process killed successfully");
+                if (_process.WaitForExit(10_000))
+                    SdkLog.Info("SE process killed successfully");
+                else
+                    SdkLog.Error("SE process failed to exit within 10 seconds of Kill()");
             }
             catch (Exception ex)
             {
@@ -88,8 +90,10 @@ namespace IntegrationTestingSDK.Client
                     {
                         SdkLog.Info($"  PID={proc.Id}");
                         proc.Kill();
-                        proc.WaitForExit(10_000);
-                        SdkLog.Info($"  PID={proc.Id} killed");
+                        if (proc.WaitForExit(10_000))
+                            SdkLog.Info($"  PID={proc.Id} killed");
+                        else
+                            SdkLog.Error($"  PID={proc.Id} failed to exit within 10 seconds");
                     }
                     catch (Exception ex)
                     {
