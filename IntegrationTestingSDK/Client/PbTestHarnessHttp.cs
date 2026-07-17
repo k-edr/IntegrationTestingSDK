@@ -229,29 +229,33 @@ namespace IntegrationTestingSDK.Client
 
         private T Get<T>(string url)
         {
-            var resp = _http.GetAsync(url).Result;
+            using var cts = new CancellationTokenSource(_http.Timeout);
+            var resp = _http.GetAsync(url, cts.Token).GetAwaiter().GetResult();
             EnsureSuccess(resp);
-            return resp.Content.ReadFromJsonAsync<T>().Result;
+            return resp.Content.ReadFromJsonAsync<T>().GetAwaiter().GetResult();
         }
 
         private T Post<T>(string url, object body)
         {
+            using var cts = new CancellationTokenSource(_http.Timeout);
             var content = JsonContent.Create(body, body.GetType());
-            var resp = _http.PostAsync(url, content).Result;
+            var resp = _http.PostAsync(url, content, cts.Token).GetAwaiter().GetResult();
             EnsureSuccess(resp);
-            return resp.Content.ReadFromJsonAsync<T>().Result;
+            return resp.Content.ReadFromJsonAsync<T>().GetAwaiter().GetResult();
         }
 
         private void Put(string url, object body)
         {
+            using var cts = new CancellationTokenSource(_http.Timeout);
             var content = JsonContent.Create(body, body.GetType());
-            var resp = _http.PutAsync(url, content).Result;
+            var resp = _http.PutAsync(url, content, cts.Token).GetAwaiter().GetResult();
             EnsureSuccess(resp);
         }
 
         private void Delete(string url)
         {
-            var resp = _http.DeleteAsync(url).Result;
+            using var cts = new CancellationTokenSource(_http.Timeout);
+            var resp = _http.DeleteAsync(url, cts.Token).GetAwaiter().GetResult();
             EnsureSuccess(resp);
         }
 
@@ -259,7 +263,7 @@ namespace IntegrationTestingSDK.Client
         {
             if (!resp.IsSuccessStatusCode)
             {
-                var body = resp.Content.ReadAsStringAsync().Result;
+                var body = resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                 throw new InvalidOperationException($"HTTP {resp.StatusCode}: {body}");
             }
         }
