@@ -117,7 +117,9 @@ namespace IntegrationTestingSDK.Client
             }
             catch (Exception ex)
             {
-                SdkLog.Warn($"CopyDirectory failed: {sourceDir} → {destDir}: {ex.Message}");
+                throw new IOException(
+                    $"Failed to copy directory from '{sourceDir}' to '{destDir}'. " +
+                    "Check file permissions and disk space.", ex);
             }
         }
 

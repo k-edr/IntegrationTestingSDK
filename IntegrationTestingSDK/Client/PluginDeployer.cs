@@ -95,14 +95,18 @@ namespace IntegrationTestingSDK.Client
             // GridSpawner.Shared
             var sharedDll = Path.Combine(reposRoot,
                 "MySpawnerController", "GridSpawner.Shared", "bin", configFolder, "netstandard2.0", "GridSpawner.Shared.dll");
-            if (File.Exists(sharedDll))
-                CopyIfNewer(sharedDll, Path.Combine(pluginsDir, "GridSpawner.Shared.dll"));
+            if (!File.Exists(sharedDll))
+                throw new FileNotFoundException(
+                    $"GridSpawner.Shared.dll not found: {sharedDll}. Build MySpawnerController first (build.ps1).");
+            CopyIfNewer(sharedDll, Path.Combine(pluginsDir, "GridSpawner.Shared.dll"));
 
             // GridSpawner.Api
             var apiDll = Path.Combine(reposRoot,
                 "MySpawnerController", "GridSpawner.Api", "bin", configFolder, "netstandard2.0", "GridSpawner.Api.dll");
-            if (File.Exists(apiDll))
-                CopyIfNewer(apiDll, Path.Combine(pluginsDir, "GridSpawner.Api.dll"));
+            if (!File.Exists(apiDll))
+                throw new FileNotFoundException(
+                    $"GridSpawner.Api.dll not found: {apiDll}. Build MySpawnerController first (build.ps1).");
+            CopyIfNewer(apiDll, Path.Combine(pluginsDir, "GridSpawner.Api.dll"));
         }
 
         // ── PluginLoader registration ─────────────────────────

@@ -50,35 +50,30 @@ namespace IntegrationTestingSDK.Client
 
         public void Kill()
         {
-            if (_process == null)
-                return;
-
-            if (_process.HasExited)
+            if (_process != null)
             {
-                SdkLog.Info("Kill: process already exited, disposing");
-                _process.Dispose();
-                _process = null;
-                return;
+                try
+                {
+                    if (!_process.HasExited)
+                    {
+                        SdkLog.Info($"Killing launcher PID={_process.Id}...");
+                        _process.Kill();
+                        _process.WaitForExit(10_000);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    SdkLog.Error("Failed to kill launcher", ex);
+                }
+                finally
+                {
+                    _process?.Dispose();
+                    _process = null;
+                }
             }
 
-            SdkLog.Info($"Killing SE process PID={_process.Id}...");
-            try
-            {
-                _process.Kill();
-                if (_process.WaitForExit(10_000))
-                    SdkLog.Info("SE process killed successfully");
-                else
-                    SdkLog.Error("SE process failed to exit within 10 seconds of Kill()");
-            }
-            catch (Exception ex)
-            {
-                SdkLog.Error("Failed to kill SE process", ex);
-            }
-            finally
-            {
-                _process?.Dispose();
-                _process = null;
-            }
+            // Kill the actual game process (launcher spawns SpaceEngineers.exe and exits)
+            KillExisting();
         }
 
         public static void KillExisting()
