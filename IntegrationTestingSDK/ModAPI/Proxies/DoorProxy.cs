@@ -16,8 +16,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
         {
             get
             {
-                var raw = GetProperty("Status");
-                if (Enum.TryParse<DoorStatus>(raw, out var s)) return s;
+                // Door terminal has no "Status" property — derive from Open
+                if (Open) return DoorStatus.Open;
                 return DoorStatus.Closed;
             }
         }

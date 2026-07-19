@@ -8,8 +8,10 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
     {
         public bool IsPermanent
         {
+            // NOTE: isPerm terminal property cannot be written via SetProperty or ExecuteAction;
+            // the game requires the ModAPI method SetTargetCoords + permanent flag, which HTTP can't reach.
             get => bool.TryParse(GetProperty("isPerm"), out var v) && v;
-            set => SetProperty("isPerm", value.ToString());
+            set { /* Not supported via terminal system */ }
         }
 
         public float Range

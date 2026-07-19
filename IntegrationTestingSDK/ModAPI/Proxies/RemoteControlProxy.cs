@@ -13,8 +13,10 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public bool IsAutoPilotEnabled
         {
+            // NOTE: Enabling autopilot requires GPS waypoints (AddWaypoint ModAPI method),
+            // which cannot be set via terminal actions/properties exposed by the HTTP API.
             get => bool.TryParse(GetProperty("AutoPilot"), out var v) && v;
-            set => SetProperty("AutoPilot", value.ToString());
+            set { /* Not supported via HTTP — requires GPS waypoints via ModAPI */ }
         }
 
         public float SpeedLimit
@@ -64,7 +66,10 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
         public void ClearWaypoints() { /* Not yet supported via HTTP */ }
         public void GetWaypointInfo(List<MyWaypointInfo> waypoints) { /* Not yet supported via HTTP */ }
         public void AddWaypoint(Vector3D coords, string name) { /* Not yet supported via HTTP */ }
-        public void SetAutoPilotEnabled(bool enabled) => ExecuteAction("AutoPilotEnabled");
+        public void SetAutoPilotEnabled(bool enabled)
+        {
+            // Requires GPS waypoints — not supported via HTTP terminal API
+        }
         public void SetCollisionAvoidance(bool enabled) => ExecuteAction("CollisionAvoidance");
         public void SetDockingMode(bool enabled) => ExecuteAction("DockingMode");
     }
