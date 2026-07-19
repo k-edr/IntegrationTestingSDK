@@ -13,4 +13,9 @@
   <ItemGroup>
     <ProjectReference Include="..\IntegrationTestingSDK\IntegrationTestingSDK.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="build-config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

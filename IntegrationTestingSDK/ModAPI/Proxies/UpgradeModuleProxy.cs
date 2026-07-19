@@ -5,9 +5,6 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 {
     internal class UpgradeModuleProxy : FunctionalBlockProxy, IMyUpgradeModule
     {
-        public uint UpgradeCount
-            => uint.TryParse(GetProperty("UpgradeCount"), out var v) ? v : 0u;
-
         public uint Connections
             => uint.TryParse(GetProperty("Connections"), out var v) ? v : 0u;
 

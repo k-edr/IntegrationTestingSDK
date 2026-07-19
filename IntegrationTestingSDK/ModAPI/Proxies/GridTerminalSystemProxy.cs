@@ -192,9 +192,10 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
                 case "IMyMedicalRoom": return b => IsType(b.Type, "MedicalRoom");
                 case "IMySolarPanel": return b => IsType(b.Type, "SolarPanel");
                 case "IMyHeatVent": return b => IsType(b.Type, "HeatVent");
-                case "IMyUpgradableBlock": return b => true; // Many blocks can be upgraded
-                case "IMyUpgradeModule": return b => IsType(b.Type, "UpgradeModule");
-                default: return b => true; // IMyTerminalBlock / IMyFunctionalBlock → all blocks
+                case "IMyTextSurface": return b => IsType(b.Type, "TextPanel") || IsType(b.Type, "LCD");
+                                case "IMyUpgradableBlock": return b => true; // Many blocks can be upgraded
+                                case "IMyUpgradeModule": return b => IsType(b.Type, "UpgradeModule");
+                                default: return b => true; // IMyTerminalBlock / IMyFunctionalBlock → all blocks
             }
         }
     }

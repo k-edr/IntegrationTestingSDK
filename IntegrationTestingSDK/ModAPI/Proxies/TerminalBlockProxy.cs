@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using IntegrationTestingSDK.Contracts;
 using IntegrationTestingSDK.ModAPI.Interfaces;
 using IntegrationTestingSDK.ModAPI.Types;
@@ -8,7 +9,7 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
     ///     Base class for terminal block proxies. Implements <see cref="IMyTerminalBlock"/>
     ///     by reading/writing terminal properties and providing block identity.
     /// </summary>
-    internal class TerminalBlockProxy : BlockProxyBase, IMyTerminalBlock, IMyCubeBlock, IMyEntity
+    internal class TerminalBlockProxy : BlockProxyBase, IMyTerminalBlock, IMyCubeBlock, IMyEntity, IMyUpgradableBlock
     {
         internal TerminalBlockProxy(IPbTestHarness harness, long gridId, BlockDto block)
             : base(harness, gridId, block) { }
@@ -84,6 +85,15 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
         {
             var raw = GetProperty("HasPlayerAccess");
             return bool.TryParse(raw, out var v) && v;
+        }
+
+        // ── IMyUpgradableBlock ──────────────────────────────
+
+        public uint UpgradeCount
+            => uint.TryParse(GetProperty("UpgradeCount"), out var v) ? v : 0u;
+
+        public void GetUpgrades(Dictionary<string, float> upgrades)
+        {
         }
     }
 }
