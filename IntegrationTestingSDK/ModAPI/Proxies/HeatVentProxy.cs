@@ -14,8 +14,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public Color ColorMinimal
         {
-            get => Color.TryParse(GetProperty("ColorMinimal"), out var c) ? c : Color.Black;
-            set => SetProperty("ColorMinimal", value.ToPackedString());
+            get => Color.TryParse(GetProperty("ColorMin"), out var c) ? c : Color.Black;
+            set => SetProperty("ColorMin", value.ToPackedString());
         }
 
         public Color ColorMaximal

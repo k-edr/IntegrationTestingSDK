@@ -7,8 +7,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
     {
         public bool UseConveyorSystem
         {
-            get => bool.TryParse(GetProperty("UseConveyorSystem"), out var v) && v;
-            set => SetProperty("UseConveyorSystem", value.ToString().ToLowerInvariant());
+            get => bool.TryParse(GetProperty("UseConveyor"), out var v) && v;
+            set => SetProperty("UseConveyor", value.ToString().ToLowerInvariant());
         }
 
         internal CollectorProxy(IPbTestHarness harness, long gridId, BlockDto block)

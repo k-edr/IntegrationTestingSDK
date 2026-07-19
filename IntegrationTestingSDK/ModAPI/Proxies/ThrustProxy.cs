@@ -8,8 +8,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
     {
         public float ThrustOverride
         {
-            get => float.TryParse(GetProperty("ThrustOverride"), out var v) ? v : 0f;
-            set => SetProperty("ThrustOverride", value.ToString());
+            get => float.TryParse(GetProperty("Override"), out var v) ? v : 0f;
+            set => SetProperty("Override", value.ToString());
         }
 
         public float ThrustOverridePercentage

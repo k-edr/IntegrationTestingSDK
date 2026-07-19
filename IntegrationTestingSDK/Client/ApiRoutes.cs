@@ -39,5 +39,8 @@ namespace IntegrationTestingSDK.Client
 
         /// <summary>GET/PUT block property. <c>{0}</c>=gridId, <c>{1}</c>=x, <c>{2}</c>=y, <c>{3}</c>=z, <c>{4}</c>=propId.</summary>
         public const string BlockProperty = "grids/{0}/blocks/{1}/{2}/{3}/properties/{4}";
+
+        /// <summary>GET block detail (properties + actions).</summary>
+        public const string BlockDetail = "grids/{0}/blocks/{1}/{2}/{3}";
     }
 }

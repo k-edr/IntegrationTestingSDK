@@ -53,7 +53,7 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public bool IsMainCockpit
         {
-            get => bool.TryParse(GetProperty("IsMainCockpit"), out var v) && v;
+            get => bool.TryParse(GetProperty("MainCockpit"), out var v) && v;
         }
 
         public Vector3 MoveIndicator

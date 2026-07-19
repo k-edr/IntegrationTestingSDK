@@ -11,19 +11,14 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
         {
             get
             {
-                var raw = GetProperty("GravityAcceleration");
-                var parts = raw?.Split(' ');
-                if (parts?.Length == 3
-                    && float.TryParse(parts[0], out var x)
-                    && float.TryParse(parts[1], out var y)
-                    && float.TryParse(parts[2], out var z))
-                {
-                    return new Vector3(x, y, z);
-                }
+                // SE stores Gravity as scalar magnitude; assume Y-axis (downward) acceleration
+                var raw = GetProperty("Gravity");
+                if (float.TryParse(raw, out var g))
+                    return new Vector3(0f, -g, 0f);
                 return Vector3.Zero;
             }
-            set => SetProperty("GravityAcceleration",
-                FormattableString.Invariant($"{value.X} {value.Y} {value.Z}"));
+            set => SetProperty("Gravity",
+                FormattableString.Invariant($"{Math.Abs(value.Length())}"));
         }
 
         public Vector3 FieldSize

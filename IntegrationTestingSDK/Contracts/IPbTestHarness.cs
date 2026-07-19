@@ -68,5 +68,10 @@ namespace IntegrationTestingSDK.Contracts
         ///     Set a terminal property value.
         /// </summary>
         bool SetBlockProperty(long gridId, int x, int y, int z, string propertyId, string value);
+
+        /// <summary>
+        ///     Get detailed block info including all terminal properties and actions.
+        /// </summary>
+        BlockDetailDto GetBlockDetail(long gridId, int x, int y, int z);
     }
 }

@@ -30,8 +30,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public bool EnableBroadcasting
         {
-            get => bool.TryParse(GetProperty("EnableBroadcasting"), out var v) && v;
-            set => SetProperty("EnableBroadcasting", value.ToString());
+            get => bool.TryParse(GetProperty("EnableBroadCast"), out var v) && v;
+            set => SetProperty("EnableBroadCast", value.ToString());
         }
 
         internal RadioAntennaProxy(IPbTestHarness harness, long gridId, BlockDto block) : base(harness, gridId, block) { }

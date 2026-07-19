@@ -29,6 +29,7 @@ namespace IntegrationTestingSDK.Tests
             public void UploadScript(long id) { }
             public string RunScript(long id, string arg = null) => null;
             public string GetLcdContent(long id) => null;
+            public BlockDetailDto GetBlockDetail(long gridId, int x, int y, int z) => null;
         }
 
         private static BlockDto MakeBlock(string name)

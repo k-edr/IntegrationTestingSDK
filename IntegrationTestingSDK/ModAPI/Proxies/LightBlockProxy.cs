@@ -42,8 +42,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public float BlinkLength
         {
-            get => float.TryParse(GetProperty("Blink Length"), out var v) ? v : 50f;
-            set => SetProperty("Blink Length", value.ToString());
+            get => float.TryParse(GetProperty("Blink Lenght"), out var v) ? v : 50f;
+            set => SetProperty("Blink Lenght", value.ToString());
         }
 
         public float BlinkOffset

@@ -39,13 +39,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public ChargeMode ChargeMode
         {
-            get
-            {
-                var raw = GetProperty("ChargeMode");
-                if (Enum.TryParse<ChargeMode>(raw, out var m)) return m;
-                return ChargeMode.Auto;
-            }
-            set => SetProperty("ChargeMode", value.ToString());
+            get => long.TryParse(GetProperty("ChargeMode"), out var l) ? (ChargeMode)l : ChargeMode.Auto;
+            set => SetProperty("ChargeMode", ((int)value).ToString());
         }
 
         public bool OnlyRecharge

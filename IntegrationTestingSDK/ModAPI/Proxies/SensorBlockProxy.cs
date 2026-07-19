@@ -9,110 +9,121 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
     {
         public float MaxRange
         {
-            get => float.TryParse(GetProperty("MaxRange"), out var v) ? v : 50f;
-            set => SetProperty("MaxRange", value.ToString());
+            get
+            {
+                // SE doesn't have a MaxRange terminal property; use maximum of all extents
+                return System.Math.Max(System.Math.Max(LeftExtend, RightExtend), System.Math.Max(BackExtend, FrontExtend));
+            }
+            set
+            {
+                // Set all extents to the same value
+                LeftExtend = value;
+                RightExtend = value;
+                BackExtend = value;
+                FrontExtend = value;
+            }
         }
 
         public float LeftExtend
         {
-            get => float.TryParse(GetProperty("LeftExtend"), out var v) ? v : 0f;
-            set => SetProperty("LeftExtend", value.ToString());
+            get => float.TryParse(GetProperty("Left"), out var v) ? v : 0f;
+            set => SetProperty("Left", value.ToString());
         }
 
         public float RightExtend
         {
-            get => float.TryParse(GetProperty("RightExtend"), out var v) ? v : 0f;
-            set => SetProperty("RightExtend", value.ToString());
+            get => float.TryParse(GetProperty("Right"), out var v) ? v : 0f;
+            set => SetProperty("Right", value.ToString());
         }
 
         public float BottomExtend
         {
-            get => float.TryParse(GetProperty("BottomExtend"), out var v) ? v : 0f;
-            set => SetProperty("BottomExtend", value.ToString());
+            get => float.TryParse(GetProperty("Bottom"), out var v) ? v : 0f;
+            set => SetProperty("Bottom", value.ToString());
         }
 
         public float TopExtend
         {
-            get => float.TryParse(GetProperty("TopExtend"), out var v) ? v : 0f;
-            set => SetProperty("TopExtend", value.ToString());
+            get => float.TryParse(GetProperty("Top"), out var v) ? v : 0f;
+            set => SetProperty("Top", value.ToString());
         }
 
         public float FrontExtend
         {
-            get => float.TryParse(GetProperty("FrontExtend"), out var v) ? v : 0f;
-            set => SetProperty("FrontExtend", value.ToString());
+            get => float.TryParse(GetProperty("Front"), out var v) ? v : 0f;
+            set => SetProperty("Front", value.ToString());
         }
 
         public float BackExtend
         {
-            get => float.TryParse(GetProperty("BackExtend"), out var v) ? v : 0f;
-            set => SetProperty("BackExtend", value.ToString());
+            get => float.TryParse(GetProperty("Back"), out var v) ? v : 0f;
+            set => SetProperty("Back", value.ToString());
         }
 
         public bool DetectPlayers
         {
-            get => bool.TryParse(GetProperty("DetectPlayers"), out var v) && v;
-            set => SetProperty("DetectPlayers", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Players"), out var v) && v;
+            set => SetProperty("Detect Players", value.ToString());
         }
 
         public bool DetectFloatingObjects
         {
-            get => bool.TryParse(GetProperty("DetectFloatingObjects"), out var v) && v;
-            set => SetProperty("DetectFloatingObjects", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Floating Objects"), out var v) && v;
+            set => SetProperty("Detect Floating Objects", value.ToString());
         }
 
         public bool DetectSmallShips
         {
-            get => bool.TryParse(GetProperty("DetectSmallShips"), out var v) && v;
-            set => SetProperty("DetectSmallShips", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Small Ships"), out var v) && v;
+            set => SetProperty("Detect Small Ships", value.ToString());
         }
 
         public bool DetectLargeShips
         {
-            get => bool.TryParse(GetProperty("DetectLargeShips"), out var v) && v;
-            set => SetProperty("DetectLargeShips", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Large Ships"), out var v) && v;
+            set => SetProperty("Detect Large Ships", value.ToString());
         }
 
         public bool DetectStations
         {
-            get => bool.TryParse(GetProperty("DetectStations"), out var v) && v;
-            set => SetProperty("DetectStations", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Stations"), out var v) && v;
+            set => SetProperty("Detect Stations", value.ToString());
         }
 
         public bool DetectSubgrids
         {
-            get => bool.TryParse(GetProperty("DetectSubgrids"), out var v) && v;
-            set => SetProperty("DetectSubgrids", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Subgrids"), out var v) && v;
+            set => SetProperty("Detect Subgrids", value.ToString());
         }
 
         public bool DetectAsteroids
         {
-            get => bool.TryParse(GetProperty("DetectAsteroids"), out var v) && v;
-            set => SetProperty("DetectAsteroids", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Asteroids"), out var v) && v;
+            set => SetProperty("Detect Asteroids", value.ToString());
         }
 
         public bool DetectOwner
         {
-            get => bool.TryParse(GetProperty("DetectOwner"), out var v) && v;
-            set => SetProperty("DetectOwner", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Owner"), out var v) && v;
+            set => SetProperty("Detect Owner", value.ToString());
         }
 
         public bool DetectFriendly
         {
-            get => bool.TryParse(GetProperty("DetectFriendly"), out var v) && v;
-            set => SetProperty("DetectFriendly", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Friendly"), out var v) && v;
+            set => SetProperty("Detect Friendly", value.ToString());
         }
 
         public bool DetectNeutral
         {
-            get => bool.TryParse(GetProperty("DetectNeutral"), out var v) && v;
-            set => SetProperty("DetectNeutral", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Neutral"), out var v) && v;
+            set => SetProperty("Detect Neutral", value.ToString());
         }
 
         public bool DetectEnemy
         {
-            get => bool.TryParse(GetProperty("DetectEnemy"), out var v) && v;
-            set => SetProperty("DetectEnemy", value.ToString());
+            get => bool.TryParse(GetProperty("Detect Enemy"), out var v) && v;
+            set => SetProperty("Detect Enemy", value.ToString());
         }
 
         public bool IsActive

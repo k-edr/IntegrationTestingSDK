@@ -8,8 +8,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
     {
         public bool IsPermanent
         {
-            get => bool.TryParse(GetProperty("IsPermanent"), out var v) && v;
-            set => SetProperty("IsPermanent", value.ToString().ToLowerInvariant());
+            get => bool.TryParse(GetProperty("isPerm"), out var v) && v;
+            set => SetProperty("isPerm", value.ToString());
         }
 
         public float Range

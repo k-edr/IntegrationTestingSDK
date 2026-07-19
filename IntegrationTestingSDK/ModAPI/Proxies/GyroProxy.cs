@@ -7,14 +7,14 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
     {
         public bool GyroOverride
         {
-            get => bool.TryParse(GetProperty("GyroOverride"), out var v) && v;
-            set => SetProperty("GyroOverride", value.ToString());
+            get => bool.TryParse(GetProperty("Override"), out var v) && v;
+            set => SetProperty("Override", value.ToString());
         }
 
         public float GyroPower
         {
-            get => float.TryParse(GetProperty("GyroPower"), out var v) ? v : 100f;
-            set => SetProperty("GyroPower", value.ToString());
+            get => float.TryParse(GetProperty("Power"), out var v) ? v : 1f;
+            set => SetProperty("Power", value.ToString());
         }
 
         public float Yaw

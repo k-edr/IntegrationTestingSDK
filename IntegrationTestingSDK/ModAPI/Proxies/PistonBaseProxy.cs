@@ -15,14 +15,14 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public float MinLimit
         {
-            get => float.TryParse(GetProperty("MinLimit"), out var v) ? v : 0f;
-            set => SetProperty("MinLimit", value.ToString());
+            get => float.TryParse(GetProperty("LowerLimit"), out var v) ? v : 0f;
+            set => SetProperty("LowerLimit", value.ToString());
         }
 
         public float MaxLimit
         {
-            get => float.TryParse(GetProperty("MaxLimit"), out var v) ? v : 10f;
-            set => SetProperty("MaxLimit", value.ToString());
+            get => float.TryParse(GetProperty("UpperLimit"), out var v) ? v : 10f;
+            set => SetProperty("UpperLimit", value.ToString());
         }
 
         public float CurrentPosition

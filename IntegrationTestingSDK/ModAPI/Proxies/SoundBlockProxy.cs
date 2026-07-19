@@ -8,14 +8,14 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
     {
         public float Volume
         {
-            get => float.TryParse(GetProperty("Volume"), out var v) ? v : 0f;
-            set => SetProperty("Volume", value.ToString("G"));
+            get => float.TryParse(GetProperty("VolumeSlider"), out var v) ? v : 0f;
+            set => SetProperty("VolumeSlider", value.ToString("G"));
         }
 
         public float Range
         {
-            get => float.TryParse(GetProperty("Range"), out var v) ? v : 0f;
-            set => SetProperty("Range", value.ToString("G"));
+            get => float.TryParse(GetProperty("RangeSlider"), out var v) ? v : 0f;
+            set => SetProperty("RangeSlider", value.ToString("G"));
         }
 
         public float LoopPeriod

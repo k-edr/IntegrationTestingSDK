@@ -217,6 +217,11 @@ namespace IntegrationTestingSDK.Client
             }
         }
 
+        public BlockDetailDto GetBlockDetail(long gridId, int x, int y, int z)
+        {
+            return Get<BlockDetailDto>(Url(ApiRoutes.BlockDetail, gridId, x, y, z));
+        }
+
         public void Dispose()
         {
             if (_disposed) return;

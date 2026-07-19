@@ -6,10 +6,10 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
     internal class ButtonPanelProxy : TerminalBlockProxy, IMyButtonPanel
     {
         public string GetButtonName(int index)
-            => GetProperty($"ButtonName_{index}");
+            => GetProperty($"ButtonName");
 
         public void SetCustomButtonName(int index, string name)
-            => SetProperty($"ButtonName_{index}", name);
+            => SetProperty($"ButtonName", name);
 
         internal ButtonPanelProxy(IPbTestHarness harness, long gridId, BlockDto block)
             : base(harness, gridId, block) { }

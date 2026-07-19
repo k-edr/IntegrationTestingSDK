@@ -7,8 +7,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
     {
         public bool HelpOthers
         {
-            get => bool.TryParse(GetProperty("HelpOthers"), out var v) && v;
-            set => SetProperty("HelpOthers", value.ToString().ToLowerInvariant());
+            get => bool.TryParse(GetProperty("helpOthers"), out var v) && v;
+            set => SetProperty("helpOthers", value.ToString().ToLowerInvariant());
         }
 
         internal ShipWelderProxy(IPbTestHarness harness, long gridId, BlockDto block)

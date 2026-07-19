@@ -25,8 +25,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public float TargetVelocityRPM
         {
-            get => float.TryParse(GetProperty("TargetVelocityRPM"), out var v) ? v : 0f;
-            set => SetProperty("TargetVelocityRPM", value.ToString());
+            get => float.TryParse(GetProperty("Velocity"), out var v) ? v : 0f;
+            set => SetProperty("Velocity", value.ToString());
         }
 
         public float TargetVelocityRad

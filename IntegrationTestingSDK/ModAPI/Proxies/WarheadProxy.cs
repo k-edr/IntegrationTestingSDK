@@ -16,8 +16,14 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public bool IsArmed
         {
-            get => bool.TryParse(GetProperty("IsArmed"), out var v) && v;
-            set => SetProperty("IsArmed", value.ToString().ToLowerInvariant());
+            // SE uses "Safety" (inverted): Safety=false means armed
+            get
+            {
+                var safety = GetProperty("Safety");
+                if (bool.TryParse(safety, out var s)) return !s;
+                return false;
+            }
+            set => SetProperty("Safety", (!value).ToString().ToLowerInvariant());
         }
 
         public void StartCountdown() => ExecuteAction("StartCountdown");

@@ -109,5 +109,12 @@ namespace IntegrationTestingSDK.Contracts
 
         /// <summary>Get all block states for this grid.</summary>
         public IReadOnlyList<BlockState> GetBlockStates() => _harness.GetBlockStates(Id);
+
+        /// <summary>Get detailed block info including terminal properties and actions.</summary>
+        public BlockDetailDto GetBlockDetail(BlockDto block)
+        {
+            return _harness.GetBlockDetail(
+                Id, block.GridPosition.X, block.GridPosition.Y, block.GridPosition.Z);
+        }
     }
 }

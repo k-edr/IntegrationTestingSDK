@@ -13,8 +13,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public bool IsAutoPilotEnabled
         {
-            get => bool.TryParse(GetProperty("IsAutoPilotEnabled"), out var v) && v;
-            set => SetProperty("IsAutoPilotEnabled", value.ToString());
+            get => bool.TryParse(GetProperty("AutoPilot"), out var v) && v;
+            set => SetProperty("AutoPilot", value.ToString());
         }
 
         public float SpeedLimit

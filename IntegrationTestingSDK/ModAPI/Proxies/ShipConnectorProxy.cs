@@ -43,8 +43,8 @@ namespace IntegrationTestingSDK.ModAPI.Proxies
 
         public float PullStrength
         {
-            get => float.TryParse(GetProperty("PullStrength"), out var v) ? v : 0f;
-            set => SetProperty("PullStrength", value.ToString());
+            get => float.TryParse(GetProperty("Strength"), out var v) ? v : 0f;
+            set => SetProperty("Strength", value.ToString());
         }
 
         public bool IsParkingEnabled
