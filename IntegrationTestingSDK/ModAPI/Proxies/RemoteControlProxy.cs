@@ -7,7 +7,7 @@ using IntegrationTestingSDK.ModAPI.Types;
 
 namespace IntegrationTestingSDK.ModAPI.Proxies
 {
-    internal class RemoteControlProxy : FunctionalBlockProxy, IMyRemoteControl
+    internal class RemoteControlProxy : CockpitProxy, IMyRemoteControl
     {
         internal RemoteControlProxy(IPbTestHarness harness, long gridId, BlockDto block) : base(harness, gridId, block) { }
 
